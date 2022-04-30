@@ -2,7 +2,6 @@ import random
 from collections import namedtuple
 from enum import Enum
 
-import numpy
 import pygame
 
 pygame.init()
@@ -10,6 +9,12 @@ font = pygame.font.Font('arial.ttf', 25)
 
 
 # font = pygame.font.SysFont('arial', 25)
+
+class Action(Enum):
+    Straight = 0
+    RightTurn = 1
+    LeftTurn = 2
+
 
 class Direction(Enum):
     RIGHT = 1
@@ -44,24 +49,31 @@ class SnakeGameAI:
 
     def reset(self):
         # init game state
-        self.direction = Direction.RIGHT
+        self._direction = Direction.RIGHT
 
-        self.head = Point(self._width / 2, self._height / 2)
-        self.snake = [self.head,
-                      Point(self.head.x - BLOCK_SIZE_PIXELS, self.head.y),
-                      Point(self.head.x - (2 * BLOCK_SIZE_PIXELS), self.head.y)]
+        self._snake_head = Point(self._width / 2, self._height / 2)
+        self._snake = [self._snake_head,
+                       Point(self._snake_head.x - BLOCK_SIZE_PIXELS, self._snake_head.y),
+                       Point(self._snake_head.x - (2 * BLOCK_SIZE_PIXELS), self._snake_head.y)]
 
-        self.score = 0
-        self.food = None
+        self._score = 0
+        self._food = None
         self._place_food()
         self._frame_iteration = 0
+        self._reward = 0
 
     def _place_food(self):
         x = random.randint(0, (self._width - BLOCK_SIZE_PIXELS) // BLOCK_SIZE_PIXELS) * BLOCK_SIZE_PIXELS
         y = random.randint(0, (self._height - BLOCK_SIZE_PIXELS) // BLOCK_SIZE_PIXELS) * BLOCK_SIZE_PIXELS
-        self.food = Point(x, y)
-        if self.food in self.snake:
+        self._food = Point(x, y)
+        if self._food in self._snake:
             self._place_food()
+
+    def _is_game_over(self) -> bool:
+        return self._is_collision() or self._frame_iteration > 100 * len(self._snake)
+
+    def _move_snake_tail(self):
+        self._snake.pop()  # Remove last element (since we added one in move_snake_head)
 
     def play_step(self, action):
         self._frame_iteration += 1
@@ -72,81 +84,91 @@ class SnakeGameAI:
                 quit()
 
         # 2. move
-        self._move(action)  # update the head
-        self.snake.insert(0, self.head)
+        self._move_snake_head(action)  # update the head
+        self._snake.insert(0, self._snake_head)
 
         # 3. check if game over
-        reward = 0
         game_over = False
-        if self._is_collision() or self._frame_iteration > 100 * len(self.snake):
+        if self._is_game_over():
+            self._reward = -10
             game_over = True
-            reward = -10
-            return reward, game_over, self.score
+            return self._reward, game_over, self._score
 
         # 4. place new food or just move
-        if self.head == self.food:
-            self.score += 1
-            reward = 10
+        if self._snake_head == self._food:
+            self._score += 1
+            self._reward = 10
             self._place_food()
         else:
-            self.snake.pop()
+            self._move_snake_tail()
 
         # 5. update ui and clock
         self._update_ui()
         self.clock.tick(SPEED)
         # 6. return game over and score
-        return reward, game_over, self.score
+        return self._reward, game_over, self._score
 
-    def _is_collision(self, point=None):
+    def _is_there_a_collision(self, point=None):
         # hits boundary
         if point is None:
-            point = self.head
-        if point.x > self._width - BLOCK_SIZE_PIXELS or point.x < 0 or point.y > self._height - BLOCK_SIZE_PIXELS or point.y < 0:
-            return True
-        # hits itself
-        if self.head in self.snake[1:]:
-            return True
+            point = self._snake_head
+        return self._collision_with_boundary(point) or self._collision_with_it_self()
 
+    def _collision_with_boundary(self, point):
+        right_boundary = self._width - BLOCK_SIZE_PIXELS
+        lower_boundary = self._height - BLOCK_SIZE_PIXELS
+        left_boundary = 0
+        upper_boundary = 0
+        if point.x > right_boundary or point.x < left_boundary or point.y > lower_boundary or point.y < upper_boundary:
+            return True
+        return False
+
+    def _collision_with_it_self(self):
+        if self._snake_head in self._snake[1:]:
+            return True
         return False
 
     def _update_ui(self):
         self.display.fill(BLACK)
 
-        for pt in self.snake:
+        for pt in self._snake:
             pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS))
             pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x + 4, pt.y + 4, 12, 12))
 
-        pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS))
+        pygame.draw.rect(self.display, RED,
+                         pygame.Rect(self._food.x, self._food.y, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS))
 
-        text = font.render("Score: " + str(self.score), True, WHITE)
+        text = font.render("Score: " + str(self._score), True, WHITE)
         self.display.blit(text, [0, 0])
         pygame.display.flip()
 
-    def _move(self, action):
-        # [straight, right, left] ar possible action
+
+    def _move_snake_head(self, action: Action):
+        # [straight, right, left] are possible actions
         clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
-        index = clock_wise.index(self.direction)
-        if numpy.array_equal(action, [1, 0, 0]):
-            new_direction = clock_wise[index]
-        elif numpy.array_equal(action, [0, 1, 0]):
-            new_direction = clock_wise[(index + 1) % 4]
-        elif numpy.array_equal(action, [0, 0, 1]):
+        index = clock_wise.index(self._direction)  # get index of current direction
+        new_direction = None
+        if action == Action.Straight:
+            new_direction = clock_wise[index]  # stay in direction
+        elif action == Action.RightTurn:
+            new_direction = clock_wise[(index + 1) % 4]  # right -> dwon, d -> l, l->u, u -> r
+        elif action == Action.LeftTurn:
             new_direction = clock_wise[(index - 1) % 4]
 
-        self.direction = new_direction
+        self._direction = new_direction
 
-        x = self.head.x
-        y = self.head.y
-        if self.direction == Direction.RIGHT:
+        x = self._snake_head.x
+        y = self._snake_head.y
+        if self._direction == Direction.RIGHT:
             x += BLOCK_SIZE_PIXELS
-        elif self.direction == Direction.LEFT:
+        elif self._direction == Direction.LEFT:
             x -= BLOCK_SIZE_PIXELS
-        elif self.direction == Direction.DOWN:
+        elif self._direction == Direction.DOWN:
             y += BLOCK_SIZE_PIXELS
-        elif self.direction == Direction.UP:
+        elif self._direction == Direction.UP:
             y -= BLOCK_SIZE_PIXELS
 
-        self.head = Point(x, y)
+        self._snake_head = Point(x, y)
 
 
 if __name__ == '__main__':
