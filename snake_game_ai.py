@@ -108,7 +108,7 @@ class SnakeGameAI:
         # 6. return game over and score
         return self._reward, game_over, self._score
 
-    def _is_there_a_collision(self, point=None):
+    def is_there_a_collision(self, point=None):
         # hits boundary
         if point is None:
             point = self._snake_head
@@ -141,7 +141,6 @@ class SnakeGameAI:
         text = font.render("Score: " + str(self._score), True, WHITE)
         self.display.blit(text, [0, 0])
         pygame.display.flip()
-
 
     def _move_snake_head(self, action: Action):
         # [straight, right, left] are possible actions
