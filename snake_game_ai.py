@@ -46,6 +46,15 @@ class SnakeGameAI:
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
         self.reset()
+        self._snake_head = None
+
+    @getattr
+    def snake_head(self):
+        return self._snake_head
+
+    @getattr
+    def snake_direction(self):
+        return self._direction
 
     def reset(self):
         # init game state
