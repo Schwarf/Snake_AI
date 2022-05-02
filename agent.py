@@ -1,5 +1,8 @@
+import random
 from collections import deque, namedtuple
 
+import numpy
+import torch
 from snake_game_ai import SnakeGameAI, BLOCK_SIZE_PIXELS, Point, Direction
 
 MAX_ITEMS_IN_MEMORY = 100_000
@@ -12,7 +15,9 @@ class Agent:
         self.number_of_games = 0
         self._epsilon_for_randomness = 0
         self._discount_rate = 0
-        self._memory = deque(maxlen=MAX_ITEMS_IN_MEMORY)
+        self._deque = deque(maxlen=MAX_ITEMS_IN_MEMORY)
+        self.model = None  # ToDo
+        self.trainer = None  # ToDo
 
     def _compute_state(self, snake_game, points_near_snake_head, snake_heading_direction):
         danger_straight = \
@@ -21,14 +26,14 @@ class Agent:
             (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.above)) or \
             (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.below))
         danger_left = \
-            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.up)) or \
-            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.down)) or \
+            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.above)) or \
+            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.below)) or \
             (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.left)) or \
             (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.right))
 
         danger_right = \
-            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.down)) or \
-            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.up)) or \
+            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.below)) or \
+            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.above)) or \
             (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.right)) or \
             (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.left))
 
@@ -37,10 +42,10 @@ class Agent:
         food_up = snake_game.food.y > snake_game.head.y
         food_down = snake_game.food.y < snake_game.head.y
 
-        state = [danger_straight, danger_right, danger_left,
-                 snake_heading_direction.left, snake_heading_direction.right,
-                 snake_heading_direction.up, snake_heading_direction.down,
-                 food_left, food_right, food_up, food_down]
+        state = numpy.array([danger_straight, danger_right, danger_left,
+                             snake_heading_direction.left, snake_heading_direction.right,
+                             snake_heading_direction.up, snake_heading_direction.down,
+                             food_left, food_right, food_up, food_down], dtype=int)
         return state
 
     def get_state(self, snake_game):
@@ -60,16 +65,33 @@ class Agent:
         return self._compute_state(snake_game, points_near_snake_head, snake_heading_direction)
 
     def remember(self, state, action, reward, next_state, game_over_state):
-        pass
+        self._deque.append((state, action, reward, next_state, game_over_state))
 
     def train_on_long_memory(self):
-        pass
+        if len(self._deque) > BATCH_SIZE:
+            mini_sample = random.sample(self._deque, BATCH_SIZE)
+        else:
+            mini_sample = self._deque
+
+        states, actions, rewards, next_states, game_over_states = zip(*mini_sample)
+        self.trainer.train_step(states, actions, rewards, next_states, game_over_states)
 
     def train_on_short_memory(self, state, action, reward, next_state, game_over_state):
-        pass
+        self.trainer.train_step(state, action, reward, next_state, game_over_state)
 
     def get_action(self, state):
-        pass
+        start_epsilon = 80 # should be a hyper-parameter
+        self.epsilon = start_epsilon - self.number_of_games
+        final_move = [0, 0, 0]
+        if random.randint(0, 200) < self.epsilon:
+            move_index = random.randint(0, 2)
+        else:
+            state0 = torch.tensor(state, dtype=torch.float)
+            prediction = self.model.predict(state0)
+            move_index = torch.argmax(prediction).item()
+
+        final_move[move_index] = 1
+        return final_move
 
 
 def train():
