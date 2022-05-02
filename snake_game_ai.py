@@ -179,6 +179,9 @@ class SnakeGameAI:
         self._snake_head = Point(x, y)
 
 
+    def food(self):
+        return self._food
+
 if __name__ == '__main__':
     game = SnakeGameAI()
 

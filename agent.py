@@ -1,4 +1,4 @@
-from collections import deque
+from collections import deque, namedtuple
 
 from snake_game_ai import SnakeGameAI, BLOCK_SIZE_PIXELS, Point, Direction
 
@@ -14,22 +14,50 @@ class Agent:
         self._discount_rate = 0
         self._memory = deque(maxlen=MAX_ITEMS_IN_MEMORY)
 
-    def determine_danger_values(self):
+    def _compute_state(self, snake_game, points_near_snake_head, snake_heading_direction):
+        danger_straight = \
+            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.right)) or \
+            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.left)) or \
+            (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.above)) or \
+            (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.below))
+        danger_left = \
+            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.up)) or \
+            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.down)) or \
+            (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.left)) or \
+            (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.right))
 
+        danger_right = \
+            (snake_heading_direction.right and snake_game.is_there_a_collision(points_near_snake_head.down)) or \
+            (snake_heading_direction.left and snake_game.is_there_a_collision(points_near_snake_head.up)) or \
+            (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.right)) or \
+            (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.left))
+
+        food_left = snake_game.food.x < snake_game.head.x
+        food_right = snake_game.food.x > snake_game.head.x
+        food_up = snake_game.food.y > snake_game.head.y
+        food_down = snake_game.food.y < snake_game.head.y
+
+        state = [danger_straight, danger_right, danger_left,
+                 snake_heading_direction.left, snake_heading_direction.right,
+                 snake_heading_direction.up, snake_heading_direction.down,
+                 food_left, food_right, food_up, food_down]
+        return state
 
     def get_state(self, snake_game):
         snake_head = snake_game.snake_head
-        point_left_of_head = Point(snake_head.x - BLOCK_SIZE_PIXELS, snake_head.y)
-        point_right_of_head = Point(snake_head.x + BLOCK_SIZE_PIXELS, snake_head.y)
-        point_below_of_head = Point(snake_head.x, snake_head.y - BLOCK_SIZE_PIXELS)
-        point_above_of_head = Point(snake_head.x, snake_head.y + BLOCK_SIZE_PIXELS)
+        points_near_snake_head = namedtuple("PointsNearSnakeHead", "left right below above")
+        points_near_snake_head.left = Point(snake_head.x - BLOCK_SIZE_PIXELS, snake_head.y)
+        points_near_snake_head.right = Point(snake_head.x + BLOCK_SIZE_PIXELS, snake_head.y)
+        points_near_snake_head.below = Point(snake_head.x, snake_head.y - BLOCK_SIZE_PIXELS)
+        points_near_snake_head.above = Point(snake_head.x, snake_head.y + BLOCK_SIZE_PIXELS)
 
-        is_snake_heading_left = snake_game.snake_direction == Direction.LEFT
-        is_snake_heading_right = snake_game.snake_direction == Direction.RIGHT
-        is_snake_heading_up = snake_game.snake_direction == Direction.UP
-        is_snake_heading_down = snake_game.snake_direction == Direction.DOWN
+        snake_heading_direction = namedtuple("SnakeHeadingDirection", "left right up down")
 
-
+        snake_heading_direction.left = snake_game.snake_direction == Direction.LEFT
+        snake_heading_direction.right = snake_game.snake_direction == Direction.RIGHT
+        snake_heading_direction.up = snake_game.snake_direction == Direction.UP
+        snake_heading_direction.down = snake_game.snake_direction == Direction.DOWN
+        return self._compute_state(snake_game, points_near_snake_head, snake_heading_direction)
 
     def remember(self, state, action, reward, next_state, game_over_state):
         pass
