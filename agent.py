@@ -3,7 +3,10 @@ from collections import deque, namedtuple
 
 import numpy
 import torch
+
+from model import Linear_QNet
 from snake_game_ai import SnakeGameAI, BLOCK_SIZE_PIXELS, Point, Direction
+from trainer import Trainer
 
 MAX_ITEMS_IN_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -14,10 +17,10 @@ class Agent:
     def __init__(self):
         self.number_of_games = 0
         self._epsilon_for_randomness = 0
-        self._discount_rate = 0
+        self._discount_rate = 0.9
         self._deque = deque(maxlen=MAX_ITEMS_IN_MEMORY)
-        self.model = None  # ToDo
-        self.trainer = None  # ToDo
+        self.model = Linear_QNet(input_size=11, hidden_size=256, output_size=3)
+        self.trainer = Trainer(self.model, learning_rate=LEARNING_RATE, gamma=self._discount_rate)
 
     def _compute_state(self, snake_game, points_near_snake_head, snake_heading_direction):
         danger_straight = \
@@ -80,14 +83,14 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, game_over_state)
 
     def get_action(self, state):
-        start_epsilon = 80 # should be a hyper-parameter
+        start_epsilon = 80  # should be a hyper-parameter
         self.epsilon = start_epsilon - self.number_of_games
         final_move = [0, 0, 0]
         if random.randint(0, 200) < self.epsilon:
             move_index = random.randint(0, 2)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model.predict(state0)
+            prediction = self.model(state0)
             move_index = torch.argmax(prediction).item()
 
         final_move[move_index] = 1

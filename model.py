@@ -1,6 +1,7 @@
+import os
+
 import torch
 import torch.nn.functional as F
-import os
 
 
 class Linear_QNet(torch.nn.Module):
@@ -20,6 +21,3 @@ class Linear_QNet(torch.nn.Module):
             os.makedirs(model_folder_path)
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
-
-
-
