@@ -118,7 +118,7 @@ def train():
             agent.train_on_long_memory()
             if score > record_score:
                 record_score = score
-                # agent mode.save()
+                agent.model.save()
                 print("Game: ", agent.number_of_games, " Score: ", score, " Record: ", record_score)
 
 
