@@ -41,10 +41,10 @@ class Agent:
             (snake_heading_direction.up and snake_game.is_there_a_collision(points_near_snake_head.right)) or \
             (snake_heading_direction.down and snake_game.is_there_a_collision(points_near_snake_head.left))
 
-        food_left = snake_game.food.x < snake_game.head.x
-        food_right = snake_game.food.x > snake_game.head.x
-        food_up = snake_game.food.y > snake_game.head.y
-        food_down = snake_game.food.y < snake_game.head.y
+        food_left = snake_game.food.x < snake_game.snake_head.x
+        food_right = snake_game.food.x > snake_game.snake_head.x
+        food_up = snake_game.food.y > snake_game.snake_head.y
+        food_down = snake_game.food.y < snake_game.snake_head.y
 
         state = numpy.array([danger_straight, danger_right, danger_left,
                              snake_heading_direction.left, snake_heading_direction.right,

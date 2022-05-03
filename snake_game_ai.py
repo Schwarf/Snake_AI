@@ -44,8 +44,8 @@ class SnakeGameAI:
         self.display = pygame.display.set_mode((self._width, self._height))
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
-        self.reset()
         self._snake_head = None
+        self.reset()
 
     @property
     def snake_head(self):
@@ -78,7 +78,7 @@ class SnakeGameAI:
             self._place_food()
 
     def _is_game_over(self) -> bool:
-        return self._is_collision() or self._frame_iteration > 100 * len(self._snake)
+        return self.is_there_a_collision() or self._frame_iteration > 100 * len(self._snake)
 
     def _move_snake_tail(self):
         self._snake.pop()  # Remove last element (since we added one in move_snake_head)
@@ -177,7 +177,7 @@ class SnakeGameAI:
 
         self._snake_head = Point(x, y)
 
-
+    @property
     def food(self):
         return self._food
 
