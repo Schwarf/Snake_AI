@@ -7,6 +7,7 @@ import torch
 from model import Linear_QNet
 from snake_game_ai import SnakeGameAI, BLOCK_SIZE_PIXELS, Point, Direction
 from trainer import Trainer
+from plot_helper import plot
 
 MAX_ITEMS_IN_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -122,7 +123,12 @@ def train():
             if score > record_score:
                 record_score = score
                 agent.model.save()
-                print("Game: ", agent.number_of_games, " Score: ", score, " Record: ", record_score)
+            print("Game: ", agent.number_of_games, " Score: ", score, " Record: ", record_score)
+            plot_scores.append(score)
+            total_score += score
+            mean_score = total_score /agent.number_of_games
+            plot_average_scores.append(mean_score)
+            plot(plot_scores, plot_average_scores)
 
 
 if __name__ == '__main__':

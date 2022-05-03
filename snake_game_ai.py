@@ -37,7 +37,6 @@ SPEED = 10
 
 
 class SnakeGameAI:
-
     def __init__(self, width=640, height=480):
         self._width = width
         self._height = height
@@ -48,11 +47,11 @@ class SnakeGameAI:
         self.reset()
         self._snake_head = None
 
-    @getattr
+    @property
     def snake_head(self):
         return self._snake_head
 
-    @getattr
+    @property
     def snake_direction(self):
         return self._direction
 
