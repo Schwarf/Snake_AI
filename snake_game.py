@@ -28,7 +28,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE_PIXELS = 20
-SPEED = 10
+SPEED = 1000
 
 
 class SnakeGame:
@@ -97,6 +97,14 @@ class SnakeGame:
             game_over = True
             return self._reward, game_over, self._score
 
+
+        #if self.distance_to_food(self._snake_head) < 200:
+        #    if self.distance_to_food(self._snake_head) < self.distance_to_food(self._snake[1]):
+        #        self._reward += 1
+        #    if self.distance_to_food(self._snake_head) > self.distance_to_food(self._snake[1]):
+        #        self._reward += -1
+
+
         # 4. place new food or just move
         if self._snake_head == self._food:
             self._score += 1
@@ -110,6 +118,10 @@ class SnakeGame:
         self.clock.tick(SPEED)
         # 6. return game over and score
         return self._reward, game_over, self._score
+
+    def distance_to_food(self, point: Point):
+        distance = numpy.sqrt((point.x - self._food.x)*(point.x - self._food.x) + (point.y - self._food.y)*(point.y - self._food.y))
+        return distance
 
     def is_there_a_collision(self, point=None):
         # hits boundary
