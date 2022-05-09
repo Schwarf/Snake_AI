@@ -17,7 +17,6 @@ LEARNING_RATE = 0.001
 class Agent:
     def __init__(self):
         self.number_of_games = 0
-        self._epsilon_for_randomness = 0
         self._discount_rate = 0.9
         self._deque = deque(maxlen=MAX_ITEMS_IN_MEMORY)
         self.model = Linear_QNet(input_size=11, hidden_size=256, output_size=3)

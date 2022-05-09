@@ -28,7 +28,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE_PIXELS = 20
-SPEED = 100
+SPEED = 10
 
 
 class SnakeGame:
