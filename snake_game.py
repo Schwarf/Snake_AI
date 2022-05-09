@@ -2,6 +2,7 @@ import random
 from collections import namedtuple
 from enum import Enum
 
+import numpy
 import pygame
 
 pygame.init()
@@ -9,12 +10,6 @@ font = pygame.font.Font('arial.ttf', 25)
 
 
 # font = pygame.font.SysFont('arial', 25)
-
-class Action(Enum):
-    Straight = 0
-    RightTurn = 1
-    LeftTurn = 2
-
 
 class Direction(Enum):
     RIGHT = 1
@@ -33,10 +28,10 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE_PIXELS = 20
-SPEED = 10
+SPEED = 100
 
 
-class SnakeGameAI:
+class SnakeGame:
     def __init__(self, width=640, height=480):
         self._width = width
         self._height = height
@@ -150,16 +145,16 @@ class SnakeGameAI:
         self.display.blit(text, [0, 0])
         pygame.display.flip()
 
-    def _move_snake_head(self, action: Action):
+    def _move_snake_head(self, action: numpy.array):
         # [straight, right, left] are possible actions
         clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
         index = clock_wise.index(self._direction)  # get index of current direction
         new_direction = None
-        if action == Action.Straight:
+        if numpy.array_equal(action, [1, 0, 0]):
             new_direction = clock_wise[index]  # stay in direction
-        elif action == Action.RightTurn:
+        elif numpy.array_equal(action, [0, 1, 0]):
             new_direction = clock_wise[(index + 1) % 4]  # right -> dwon, d -> l, l->u, u -> r
-        elif action == Action.LeftTurn:
+        elif numpy.array_equal(action, [0, 0, 1]):
             new_direction = clock_wise[(index - 1) % 4]
 
         self._direction = new_direction
@@ -181,8 +176,9 @@ class SnakeGameAI:
     def food(self):
         return self._food
 
+
 if __name__ == '__main__':
-    game = SnakeGameAI()
+    game = SnakeGame()
 
     # game loop
     while True:

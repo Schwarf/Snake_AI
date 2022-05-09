@@ -5,7 +5,7 @@ import numpy
 import torch
 
 from model import Linear_QNet
-from snake_game_ai import SnakeGameAI, BLOCK_SIZE_PIXELS, Point, Direction
+from snake_game import SnakeGame, BLOCK_SIZE_PIXELS, Point, Direction
 from trainer import Trainer
 from plot_helper import plot
 
@@ -104,7 +104,7 @@ def train():
     total_score = 0
     record_score = 0
     agent = Agent()
-    snake_game = SnakeGameAI()
+    snake_game = SnakeGame()
     while True:
         # get current state
         current_state = agent.get_state(snake_game)
