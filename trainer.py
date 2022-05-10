@@ -19,16 +19,16 @@ class Trainer:
             next_state = torch.unsqueeze(next_state, 0)
             action = torch.unsqueeze(action, 0)
             reward = torch.unsqueeze(reward, 0)
-            game_over_state = (game_over_state, )
+            game_over_state = (game_over_state,)
 
         # predicted Q values with the current state
         prediction = self._model(state)
 
         target = prediction.clone()
         for index in range(len(game_over_state)):
-            Q_new  = reward[index]
+            Q_new = reward[index]
             if not game_over_state[index]:
-                    Q_new = reward[index] + self._gamma * torch.max(self._model(next_state[index]))
+                Q_new = reward[index] + self._gamma * torch.max(self._model(next_state[index]))
             target[index][torch.argmax(action).item()] = Q_new
         # Q_new = reward + gamma * max(next_predicted Q value) -> only do this if not game_over_state
         # pred.clone()
@@ -37,5 +37,3 @@ class Trainer:
         loss = self._criterion(target, prediction)
         loss.backward()
         self._optimizer.step()
-
-

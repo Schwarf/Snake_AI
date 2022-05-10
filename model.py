@@ -12,7 +12,7 @@ class Linear_QNet(torch.nn.Module):
 
     def forward(self, input_tensor):
         next_layer = F.relu(self._input_layer(input_tensor))
-        next_layer = F.relu(self._output_layer(next_layer))
+        next_layer = self._output_layer(next_layer)
         return next_layer
 
     def save(self, file_name='model.pth'):

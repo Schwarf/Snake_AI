@@ -52,6 +52,8 @@ class SnakeGame:
 
     def reset(self):
         # init game state
+        #direction_index = random.randint(1, 4)
+        #self._direction = Direction(direction_index)
         self._direction = Direction.RIGHT
 
         self._snake_head = Point(self._width / 2, self._height / 2)
@@ -97,13 +99,11 @@ class SnakeGame:
             game_over = True
             return self._reward, game_over, self._score
 
-
-        #if self.distance_to_food(self._snake_head) < 200:
+        # if self.distance_to_food(self._snake_head) < 200:
         #    if self.distance_to_food(self._snake_head) < self.distance_to_food(self._snake[1]):
         #        self._reward += 1
         #    if self.distance_to_food(self._snake_head) > self.distance_to_food(self._snake[1]):
         #        self._reward += -1
-
 
         # 4. place new food or just move
         if self._snake_head == self._food:
@@ -120,7 +120,8 @@ class SnakeGame:
         return self._reward, game_over, self._score
 
     def distance_to_food(self, point: Point):
-        distance = numpy.sqrt((point.x - self._food.x)*(point.x - self._food.x) + (point.y - self._food.y)*(point.y - self._food.y))
+        distance = numpy.sqrt(
+            (point.x - self._food.x) * (point.x - self._food.x) + (point.y - self._food.y) * (point.y - self._food.y))
         return distance
 
     def is_there_a_collision(self, point=None):

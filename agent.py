@@ -110,7 +110,7 @@ def train():
         # get move
         final_move = agent.get_action(current_state)
         reward, game_over, score = snake_game.play_step(final_move)
-        print("Reward: ", reward)
+        #print("Reward: ", reward)
         new_state = agent.get_state(snake_game)
         # train short memory
         agent.train_on_short_memory(current_state, final_move, reward, new_state, game_over)
