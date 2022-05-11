@@ -65,7 +65,6 @@ class SnakeGame:
         self._food = None
         self._place_food()
         self._frame_iteration = 0
-        self._reward = 0
 
     def _place_food(self):
         x = random.randint(0, (self._width - BLOCK_SIZE_PIXELS) // BLOCK_SIZE_PIXELS) * BLOCK_SIZE_PIXELS
@@ -94,10 +93,11 @@ class SnakeGame:
 
         # 3. check if game over
         game_over = False
+        reward = 0
         if self._is_game_over():
-            self._reward = -10
+            reward = -10
             game_over = True
-            return self._reward, game_over, self._score
+            return reward, game_over, self._score
 
         # if self.distance_to_food(self._snake_head) < 200:
         #    if self.distance_to_food(self._snake_head) < self.distance_to_food(self._snake[1]):
@@ -108,7 +108,7 @@ class SnakeGame:
         # 4. place new food or just move
         if self._snake_head == self._food:
             self._score += 1
-            self._reward = 10
+            reward = 10
             self._place_food()
         else:
             self._move_snake_tail()
@@ -117,7 +117,7 @@ class SnakeGame:
         self._update_ui()
         self.clock.tick(SPEED)
         # 6. return game over and score
-        return self._reward, game_over, self._score
+        return reward, game_over, self._score
 
     def distance_to_food(self, point: Point):
         distance = numpy.sqrt(

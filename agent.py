@@ -5,9 +5,9 @@ import numpy
 import torch
 
 from model import Linear_QNet
+from plot_helper import plot
 from snake_game import SnakeGame, BLOCK_SIZE_PIXELS, Point, Direction
 from trainer import Trainer
-from plot_helper import plot
 
 MAX_ITEMS_IN_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -16,6 +16,7 @@ LEARNING_RATE = 0.001
 
 class Agent:
     def __init__(self):
+        self.epsilon = 0
         self.number_of_games = 0
         self._discount_rate = 0.9
         self._deque = deque(maxlen=MAX_ITEMS_IN_MEMORY)
@@ -110,7 +111,7 @@ def train():
         # get move
         final_move = agent.get_action(current_state)
         reward, game_over, score = snake_game.play_step(final_move)
-        #print("Reward: ", reward)
+        # print("Reward: ", reward)
         new_state = agent.get_state(snake_game)
         # train short memory
         agent.train_on_short_memory(current_state, final_move, reward, new_state, game_over)
@@ -126,7 +127,7 @@ def train():
             print("Game: ", agent.number_of_games, " Score: ", score, " Record: ", record_score)
             plot_scores.append(score)
             total_score += score
-            mean_score = total_score /agent.number_of_games
+            mean_score = total_score / agent.number_of_games
             plot_average_scores.append(mean_score)
             plot(plot_scores, plot_average_scores)
 
