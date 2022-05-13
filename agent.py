@@ -1,3 +1,4 @@
+import json
 import random
 from collections import deque, namedtuple
 
@@ -98,13 +99,14 @@ class Agent:
         return final_move
 
 
-def train():
+def train(maximal_number_of_games):
     plot_scores = []
     plot_average_scores = []
     total_score = 0
     record_score = 0
     agent = Agent()
     snake_game = SnakeGame()
+    number_of_games = 0
     while True:
         # get current state
         current_state = agent.get_state(snake_game)
@@ -130,7 +132,23 @@ def train():
             mean_score = total_score / agent.number_of_games
             plot_average_scores.append(mean_score)
             plot(plot_scores, plot_average_scores)
+            number_of_games += 1
+            if number_of_games == maximal_number_of_games:
+                return {"scores": plot_scores, "average_scores": plot_average_scores}
+
+
+def compute_stats():
+    maximal_number_of_games = 200
+    repeat_training = 100
+    count = 0
+    training_data = {}
+    while count < repeat_training:
+        training_data[count] = train(maximal_number_of_games)
+        count += 1
+    print(training_data)
+    with open("data.json", "w") as file:
+        json.dump(training_data, file, indent=4)
 
 
 if __name__ == '__main__':
-    train()
+    compute_stats()
